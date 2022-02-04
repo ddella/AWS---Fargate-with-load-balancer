@@ -23,6 +23,9 @@ Let's get started!
 
 There's lots of steps but if you read and follow along you shouldn't have any problem to complete this workshop.
 
+### Here's the architecture for this workshop:
+![Architecture](images/Architecture.png)
+
 ### Conventions:
 
 Throughout this workshop, we will provide guidelines for you to configure the environment with the [AWS management console](https://console.aws.amazon.com). The only commands that requires the Amazon CLI are for Amazon ECR. These commands will look like this:
