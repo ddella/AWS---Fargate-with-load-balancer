@@ -141,11 +141,13 @@ In step #5 of the preceding section, we mentioned that we needed to change the *
 ![Edit listener](images/Picture19.png)
 2. Remove the **Forward to**, click on **Add action** and select **Redirect**.
 ![Remove target group](images/Picture20.png)
-3. Enter port **443** and leave the defaults, click **Save changes**.
+3. Click on **Add action** and select **Forward**.
+![Remove target group](images/Picture20-1.png)
+4. Enter port **443** and leave the defaults, click **Save changes**.
 ![Redirect HTTP to HTTPS](images/Picture21.png)
-4. The final listener rules are, every requests received on port **80** is redirected on port **443**. Every requests received on port **443** is directed on the target group **ECS-Target-Group-php8-nginx**.
+5. The final listener rules are, every requests received on port **80** is redirected on port **443**. Every requests received on port **443** is directed on the target group **ECS-Target-Group-php8-nginx**.
 ![Listener rules](images/Picture22.png)
-5. Make a copy the **DNS name**. This is the URL clients use to access your containers. It could also be configured as a ```CNAME```in **Route 53** if you have your own domain.
+6. Make a copy the **DNS name**. This is the URL clients use to access your containers. It could also be configured as a ```CNAME```in **Route 53** if you have your own domain.
 ![DNS name](images/Picture23.png)
 
 ### Create a security group for the Docker containers:
@@ -206,17 +208,21 @@ We're almost there. The last thing is to create the **ECS Service**.
 ![Configure service](images/Picture39.png)
 3. The next page is the **Configure network**. This is the “tricky” portion. Select your **VPC** and your **Subnets** where the containers will run. The **Auto-assign public IP** needs to be **ENABLED** or your tasks won’t start. The will stay in **PENDING** state after you create your service later. Click **Edit** to edit your **Security groups**. It will open a side window.
 ![VPC and security groups](images/Picture40.png)
-4. Select the **Security group ID** for the containers and click **Save**.
+4. Select the **Security group ID** that was created for the containers and click **Save**.
 ![VPC and security groups](images/Picture40-1.png)
-6. In the **Load balancing** section, select the **Application Load Balancer**. The name should be filled automatically.
+5. In the **Load balancing** section, select the **Application Load Balancer**. The **Load balancer name** should be filled automatically.
 ![Load Balancing](images/Picture41.png)
-7. Just below you have to click **Add to load balancer**.
+6. Just below you have to click **Add to load balancer**.
 ![Add Load Balancing](images/Picture42.png)
-8. New fields will appear, select the **Target group** in the **Target group name**. Click **Next step**.
+7. Click **Create new** in the **Target group name** box. Select the group **ECS-Target-Group-php8-nginx**. It should be the only one if it's your first time with ECS.
 ![Containers](images/Picture43.png)
+8. After you've selected the **Target group name**.
+![Containers](images/Picture43-1.png)
 9. Leave the **Service Auto Scaling** to the default value and click **Next step**.
 ![Auto Scaling](images/Picture44.png)
-10. Review and click **Create Service**. This will take some time. At this point you’re back to the main cluster page. You can check the **Tasks** and you should see three.
+10. Review and click **Create Service**. This will take some time. At this point you’re back to the main cluster page. 
+![Cluster status page](images/Picture44-1.png)
+11. You can check the **Tasks** and you should see three.
 ![Cluster status page](images/Picture45.png)
 
 ### Checkpoint:
@@ -228,10 +234,12 @@ At this point, you should have a working container for the monolith codebase sto
 ### Amazon Route 53
 If you have a domain on **Route 53**, you can create a CNAME to the DNS name of the load balancer. If you don’t, you can register one for 3$-5$/year. This step is optional.
 ![Route 53](images/Picture46.png)
+Record created.
+![Route 53](images/Picture47.png)
 
 ### Web Browser
 Open you browser and type [http://<url>](http://%3curl%3e) or [https://<url>](https://%3curl%3e). Click on reload the page and the IP address of the server should “round robin” between the three containers created by Fargate.
-![Route 53](images/Picture47.png)
+![Route 53](images/Picture48.png)
 
 The ```url``` is the load balancer ```url``` or the Amazon Route 53, if you decided to create a ```CNAME```.
 
