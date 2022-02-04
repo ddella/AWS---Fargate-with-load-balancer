@@ -256,4 +256,9 @@ Delete manually created resources throughout the labs:
 * EC2 ALB - Delete the load balancer and associated target groups.
 * Route 53 - delete the ```CNAME```, if you created one.
 
+# [CHANGELOG](./CHANGELOG.md)
+
+# License
+This project is licensed under the [MIT license](LICENSE).
+
 [*^ back to top*](#Amazon-ECS-and-load-balancer-with-Docker-containers)
