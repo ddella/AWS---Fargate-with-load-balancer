@@ -9,31 +9,39 @@ Let's get started!
 
 * AWS account - if you don't have one, you can create one [here](https://aws.amazon.com/).
 * Familiarity with [AWS](httpts://aws.amazon.com), [Docker](https://www.docker.com/) and [PHP](https://www.php.net/) - *not required but a bonus*.
+* Amazon Command Line Interface [CLI](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html).
 
 ### What you'll do:
 
 1. Build a Docker image.  See my tutorial on GitHub [here](https://github.com/ddella/PHP8-Nginx). If you have your own Docker image please feel free to use it. The image that I built has some function to return the IP address of the web server an some X-FORWARD-TO variables.
-2. Push that image to AWS ECR. This is the equivalent to [Docker hub](https://hub.docker.com/).
-3. Create two security groups. One for the load balancer and the other one for the containers.
+2. Push that image to Amazon ECR which is the equivalent of [Docker hub](https://hub.docker.com/).
+3. Create two security groups, aka virtual firewalls. One for the load balancer and the other one for the containers.
 4. Create a load balancer.
 5. Create a service for Fargate to launch the tasks or containers.
-6. Last you open ypur browser and enter the URL of the load balancer.
+6. Test Amazon ECS with your preferred web browser.
 
 There's lots of steps but if you read and follow along you shouldn't have any problem to complete this workshop.
 
 ### Conventions:
 
-Throughout this workshop, we will provide commands for you to run in the [AWS management console](https://console.aws.amazon.com).
+Throughout this workshop, we will provide guidelines for you to configure the environment with the [AWS management console](https://console.aws.amazon.com). The only commands that requires the Amazon CLI is for Amazon ECR. These commands will look like this:
+```sh
+aws <command> <subcommand> [options and parameters]
+```
 
+Verify that Amazon CLI is installed with the following commands. As of writing this on macOS, the version is ```aws-cli/2.4.15 Python/3.8.8 Darwin/21.2.0 exe/x86_64 prompt/off```:
+```sh
+aws --version
+```
 ### IMPORTANT: Workshop Cleanup
 
 You will be deploying infrastructure on AWS which will have an associated cost.  Make sure everything is cleaned up when you're done with this workshop, to avoid unnecessary charges.
 
-We're expecting the cost of this lab to be less than 1,00$USD, even with free-tier.
+We're expecting the cost of this lab to be less than 1,00$ USD, even with free-tier.
 
 ## Let's Begin!
 
-### AWS ECR - Create a repository:
+### AWS ECR - Create a private repository:
 
 1. Open the Amazon ECR console and Click on **Get started**.
 ![Create Repository](images/Picture1.png)
@@ -44,12 +52,15 @@ We're expecting the cost of this lab to be less than 1,00$USD, even with free-ti
 ![Push commands](images/Picture4.png)
 
 ### Push Docker image to AWS ECR:
+This will copy the Docker image you have on your computer to the Amazon ECR repository you just created. I assume you followed the steps in my tutorial [here](https://github.com/ddella/PHP8-Nginx). 
 
-1.Run the following command to retrieve an authentication token and authenticate your Docker client to your registry. **Replace 012345678901 with your account id**. If successful, you should get the the message: **Login Succeeded**
+Open a ```terminal``` for the next four steps.
+
+1.Run the following command to retrieve an authentication token and authenticate your Docker client to your registry. Replace **012345678901** with your account id. If successful, you should get the the message: **Login Succeeded**
 ```sh
 aws ecr get-login-password --region us-east-2 | docker login --username AWS --password-stdin 012345678901.dkr.ecr.us-east-2.amazonaws.com
 ```
-2. Tag the Docker image you built to push it to your repository. **Replace 012345678901 with your account id**.
+2. Tag the Docker image you built to push it to your repository. Replace **012345678901** with your account id.
 ```sh
 docker tag php8_nginx:latest 012345678901.dkr.ecr.us-east-2.amazonaws.com/ecr_repo_php8_nginx:latest
 ```
@@ -62,27 +73,27 @@ REPOSITORY  TAG  IMAGE ID  CREATED  SIZE
 012345678901.dkr.ecr.us-east-2.amazonaws.com/php8_nginx  latest  b021dbb9e75e  20 minutes ago  30.4MB
 php8_nginx latest  b021dbb9e75e  20 minutes ago  30.4MB
 ```
-4. Run the following command to push this image to your newly created AWS ECR repository. **Replace 012345678901 with your account id**.
+4. Run the following command to push this image to your newly created AWS ECR repository. Replace **012345678901** with your account id.
 ```sh
 docker push 012345678901.dkr.ecr.us-east-2.amazonaws.com/php8_nginx:latest
 ```
 5. Open the Amazon ECR Console and check that the container has been pushed. See the arrow to copy the **URI**, you will need it later.
 ![Container URI](images/Picture5.png)
-### Checkpoint:
-At this point, you should have a Docker image stored in your ECR private repository.
 
-Select the image to see the detail.
+### Checkpoint:
+At this point, you should have a Docker image stored in your ECR private repository. Select the image to see the detail.
 ![Container URI](images/Picture6.png)
+
 ## AWS Load Balancer
 AWS load balancer automatically distributes the incoming traffic across multiple targets, such as EC2 instances, containers, and IP addresses, in one or more Availability Zones. It serves as the **single point** of contact for clients. The components of a load balancer are:
 1. **Security Group** acts as a virtual firewall for your instance to control inbound and outbound traffic.
-2. **Target Group** routes requests to one or more registered targets, such as EC2 instances, using the protocol and port number that you specify.
+2. **Target Group** routes requests to one or more registered targets, such as EC2 instances, containers, using the protocol and port number that you specify.
 3. **Listeners** checks for connection requests from clients, using the protocol and port that you configure.
 
 
 ### Create a Security Group for the Load Balancer:
 
-In this section we need to create a security group for the **load balancer**. The security group is a firewall that sits in front of the load balancer. The ```inboud``` rules must permit all traffic for HTTP/S from the Internet. Following are the rules. You can change them to suit your needs. _We are not using IPv6 in the lab_.
+In this section we need to create a security group for the **load balancer**. The security group is a virtual firewall that sits in front of the load balancer. The ```inboud``` rules must permit all traffic for HTTP/S from the Internet. The table below as all the ```inboud``` rules. You can change them to suit your needs. _We are not using IPv6 in the lab even if we added the rules_.
 
 |IPv4/6 |Protocol|TCP port|Source IP address|Description|
 |:--- | :--- | :---:|---:|:---|
@@ -98,7 +109,7 @@ In this section we need to create a security group for the **load balancer**. Th
 3. Click **Create security group** at the bottom of the page.
 
 ### Create Target Group for the Load Balancer
-In this section we create a ** Target Group** for the load balancer. In our case, the target type is **IP addresses**.
+In this section we create a ** Target Group** for the load balancer. For this workshop you need to use **IP addresses** as the target type.
 
 1. Open the Amazon **EC2** console, on the navigation pane, under **Load Balancing** section, select **Target Groups** and click on **Create target group**. Configure the **Choose a target type**, this needs to be **IP** addresses. The protocol is HTTP port 80. Select the **VPC** where the containers will run. Leave the **Health checks** section with the default value and click **Next** at the bottom of the page.
 ![Container URI](images/Picture9.png)
@@ -119,12 +130,12 @@ In this section we actually create the **Load Balancer** for our containers.
 ![Security Group](images/Picture15.png)
 5. In the **Listeners and routing** section, configure two listeners, for HTTP and HTTPS. Choose the **target group**. The **target group** for HTTP will be changed later to ```redirect``` all traffic to HTTPS.
 ![Listeners and routing](images/Picture16.png)
-6. In the **Secure listener settings** section, leave the **Security** policy to **ELBSecurityPolicy-2016-08**. This is the SSL Protocols/Ciphers. Select **Import** for the **Default SSL certificate**. If you used my Docker container, I have generated a **Certificate private key** (```nginx.key```) and a **Certificate body** (```nginx-certificate.crt```). Just copy/paste the file in the correct text box. When you’ll do the test at the end, your browser will complain about the self-signed certificate. That can be safely ignored. You can generate your own certificate and private key or use AWS certificate manager.
+6. In the **Secure listener settings** section, leave the **Security** policy to **ELBSecurityPolicy-2016-08**. This is the SSL Protocols/Ciphers. Select **Import** for the **Default SSL certificate**. If you used my Docker container, I have generated a **Certificate private key** (```nginx.key```) and a **Certificate body** (```nginx-certificate.crt```). Just copy/paste the file in the correct text box. When you’ll do the test at the end, your browser will complain about the self-signed certificate. That can be safely ignored. You can generate your own certificate and private key or use AWS certificate manager. Click **Create load balancer** at the bottom of the page. This will take a few minutes.
 ![Secure listener settings](images/Picture17.png)
-7. Click **Create load balancer** at the bottom of the page. This will take a few minutes. Wait until you see a **State** of **active**.
+7. Wait until you see a **State** of **active**.
 ![Load balancer state](images/Picture18.png)
 #### Listeners
-In step #5 of the preceding section, we mentioned that we needed to change the **Listeners**. The goal is to redirect all HTTP traffic, from client, to HTTPS and send this traffic to the containers. This is a simple ```HTTP response status code 301``` sent by the load balancer to client if they use HTTP.
+In step #5 of the preceding section, we mentioned that we needed to change the **Listeners**. The goal is to redirect all HTTP traffic, from client, to HTTPS and send this traffic to the containers. This is a simple ```HTTP response status code 301``` sent by the load balancer to clients, if they used HTTP.
 
 1. In the **Listeners** tab of the **Load Balancers** page, we need to modify the **listener**. Select the **HTTP:80** and click **Edit**.
 ![Edit listener](images/Picture19.png)
@@ -132,18 +143,19 @@ In step #5 of the preceding section, we mentioned that we needed to change the *
 ![Remove target group](images/Picture20.png)
 3. Enter port **443** and leave the defaults, click **Save changes**.
 ![Redirect HTTP to HTTPS](images/Picture21.png)
-4. The final listener rules are, every request received on port **80** is redirected on port **443**. Every request received on port **443** is directed on the target group **ECS-Target-Group-php8-nginx**.
+4. The final listener rules are, every requests received on port **80** is redirected on port **443**. Every requests received on port **443** is directed on the target group **ECS-Target-Group-php8-nginx**.
 ![Listener rules](images/Picture22.png)
 5. Make a copy the **DNS name**. This is the URL clients use to access your containers. It could also be configured as a ```CNAME```in **Route 53** if you have your own domain.
 ![DNS name](images/Picture23.png)
+
 ### Create a security group for the Docker containers:
-Create a security group for the containers. The only connection allowed on the containers  are from the load balancer. No traffic, directly from the Internet, is allowed to reach the containers. The security group needs to permit all ephemeral tcp port from load balancer. On AWS, the ephemeral port range for Elastic Load Balancers is 0-65535. _If you enter 1024-65535, your containers won’t be reachable._
+Create a security group for the containers. The only connection allowed on the containers  are from the load balancer. No traffic, directly from the Internet, is allowed to reach the containers. The security group needs to permit all ephemeral ```tcp``` port from load balancer. On AWS, the ephemeral port range for Elastic Load Balancers is ```0-65535```. _If you enter ```1024-65535```, your containers won’t be reachable._
 
 |IPv4/6 |Protocol|TCP port|Source IP address|Description|
-|:--- |:--- |:---:| ---:|:--- |
+|:--- |:--- |:---:|:---:|:--- |
 |Custom TCP| TCP|0-65535|Load balancer SG|Permit traffic from load balancer|
 
-1. Open the Amazon **EC2** console, in the **Network & Security** section select **Security Groups** and Click on **Create security group**. Configure the **Name**, **Description** and your **VPC** where the load balancer will sit.
+1. Open the Amazon **EC2** console, on the navigation pane, in the **Network & Security** section select **Security Groups** and Click on **Create security group**. Configure the **Name**, **Description** and your **VPC** where the load balancer will sit.
 ![Basic detail](images/Picture24.png)
 2. Add the **Inbound rules**.The Docker containers need to accept traffic from the load balancer only. Select **All TCP** for the **Type** the **Port range** is automatically filled with ```0-65535```. The **Source** needs to be the ```load balancer Security Group```. Click on **Save rules** Leave the default **Onbound rules**.
 ![Inbound rules](images/Picture25.png)
@@ -192,17 +204,19 @@ We're almost there. The last thing is to create the **ECS Service**.
 ![Create service](images/Picture38.png)
 2. On the **Configure service**, fill out the fields. The **Number of tasks** is the number of container Fargate will run. Click **Next step** at the bottom of the page.
 ![Configure service](images/Picture39.png)
-3. The next page is the **Configure network**. This is the “tricky” portion. Select your **VPC** and your **Subnets** where the containers will run. The **Auto-assign public IP** needs to be **ENABLED** or your tasks won’t start. The will stay in **PENDING** state after you create your service later.
+3. The next page is the **Configure network**. This is the “tricky” portion. Select your **VPC** and your **Subnets** where the containers will run. The **Auto-assign public IP** needs to be **ENABLED** or your tasks won’t start. The will stay in **PENDING** state after you create your service later. Click **Edit** to edit your **Security groups**. It will open a side window.
 ![VPC and security groups](images/Picture40.png)
-4. In the **Load balancing** section, select the **Application Load Balancer**. The name should be filled automatically.
+4. Select the **Security group ID** for the containers and click **Save**.
+![VPC and security groups](images/Picture40-1.png)
+6. In the **Load balancing** section, select the **Application Load Balancer**. The name should be filled automatically.
 ![Load Balancing](images/Picture41.png)
-5. Just below you have to click **Add to load balancer**.
+7. Just below you have to click **Add to load balancer**.
 ![Add Load Balancing](images/Picture42.png)
-6. New fields will appear, select the **Target group** in the **Target group name**. Click **Next step**.
+8. New fields will appear, select the **Target group** in the **Target group name**. Click **Next step**.
 ![Containers](images/Picture43.png)
-7. Leave the **Service Auto Scaling** to the default value and click **Next step**.
+9. Leave the **Service Auto Scaling** to the default value and click **Next step**.
 ![Auto Scaling](images/Picture44.png)
-8. Review and click **Create Service**. This will take some time. At this point you’re back to the main cluster page. You can check the **Tasks** and you should see three.
+10. Review and click **Create Service**. This will take some time. At this point you’re back to the main cluster page. You can check the **Tasks** and you should see three.
 ![Cluster status page](images/Picture45.png)
 
 ### Checkpoint:
