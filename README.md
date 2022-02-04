@@ -45,7 +45,7 @@ We're expecting the cost of this lab to be less than 1,00$ USD, even with free-t
 
 1. Open the Amazon ECR console and Click on **Get started**.
 ![Create Repository](images/Picture1.png)
-2. Select **Private**, enter the **Repository name** ```ecr_repo_php8_nginx```  and hit **Create repository** at the bottom of the page.
+2. Select **Private**, enter the **Repository name** ```ecr_repo_php8_nginx```  and hit **Create repository** at the bottom of the page.  
 ![Create Repository](images/Picture2.png)
 3. On the main **Amazon ECR** page, select the new **Repository name** created in the preceeding step and click on the **View push commands**. The page will give you the information needed to **push** the image to ECR. It’s a four step process. If you followed my tutorial on building the Docker image, there’s no need to do step #2.
 ![Private repositories](images/Picture3.png)
