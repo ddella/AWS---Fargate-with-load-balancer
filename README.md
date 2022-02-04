@@ -1,8 +1,7 @@
 ﻿
-# Amazon ECS and load balancer with Docker containers
+# Amazon ECS Fargate and load balancer with Docker containers
 
-In this workshop, you'll build a Docker image with Nginx web server and PHP 8 and deploy it on Amazon ECS with a load balancer. If you already have your own Docker image, feel free to use it. The load balancer will accept HTTP/S connections from the clients and forward it to the farm of containers. All HTTP requests, from the client, will be redirected to HTTPS.
-
+In this workshop, you'll build a Docker image with Nginx web server with PHP 8 and deploy it on Amazon ECS with a load balancer. If you already have your own Docker image, feel free to use it. The load balancer will accept HTTP/S connections from the clients and forward it to the farm of containers. All HTTP requests, from the client, will be redirected to HTTPS. We will use ```self signed```certificate which will cause a warning on your browser.
 Let's get started!
 
 ### Requirements:
