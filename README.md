@@ -57,7 +57,7 @@ We're expecting the cost of this lab to be less than 1,00$ USD, even with free-t
 ### Push Docker image to AWS ECR:
 This will copy the Docker image you have on your computer to the Amazon ECR repository you just created. I assume you followed the steps in my tutorial [here](https://github.com/ddella/PHP8-Nginx).  If not, just replace the name of the image.
 
-Open a ```terminal``` for the next four steps.
+Open a ```terminal``` for the next four steps. This is the only section where we'll use the Amazon Command Line Interface.
 
 1.Run the following command to retrieve an authentication token and authenticate your Docker client to your registry. Replace **012345678901** with your account id. If successful, you should get the the message: **Login Succeeded**
 ```sh
