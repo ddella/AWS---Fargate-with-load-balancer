@@ -237,7 +237,12 @@ At this point, you should have running containers that are accessible through th
 
 ## Time to test the web servers
 ### Amazon Route 53
-If you have a domain on **Route 53**, you can create a CNAME to the DNS name of the load balancer. If you don’t, you can register one for 3$-5$/year. _This step is optional_.
+If you have a domain on **Route 53**, you can create a CNAME to the DNS name of the load balancer. If you don’t, you can register one for 3$-5$/year. _This step is optional_.  
+Go to ```Route 53```, select your hosted zone
+1. in **Record name**, enter a friendly name
+2. in **Record type**, select ```CNAME```
+3. in **Value**, enter the DNS name of the load Balancer
+
 ![Route 53](images/Picture46.png)
 Record created.
 ![Create CNAM](images/Picture47.png)
