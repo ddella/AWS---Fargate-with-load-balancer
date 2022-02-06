@@ -242,9 +242,10 @@ Go to ```Route 53```, select your hosted zone
 1. in **Record name**, enter a friendly name
 2. in **Record type**, select ```CNAME```
 3. in **Value**, enter the DNS name of the load Balancer
+4. Click on **Create records**
 
 ![Route 53](images/Picture46.png)
-Record created.
+Verify that the record has been created. _This step is optional_.
 ![Create CNAM](images/Picture47.png)
 
 ### Web Browser
