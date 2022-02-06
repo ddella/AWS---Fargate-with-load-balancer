@@ -25,6 +25,8 @@ There's lots of steps but if you read and follow along you shouldn't have any pr
 ### Here's the architecture for this workshop:
 ![Architecture](images/Architecture.png)
 
+Users on the Internet will access the web servers via either HTTP or HTTPS. They will hit a load balancer that will redirect the traffic to the web servers. The load balancer will redirect every request received via HTTP to HTTPS. The load balancer uses only HTTP to access the web servers.  
+
 ### Conventions:
 
 Throughout this workshop, we will provide guidelines for you to configure the environment with the [AWS management console](https://console.aws.amazon.com). The only commands that requires the Amazon CLI are for Amazon ECR. These commands will look like this:
